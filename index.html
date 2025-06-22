@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>管理员留言系统</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            color: #333;
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 30px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        header::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background: linear-gradient(to right, #1a2a6c, #b21f1f, #fdbb2d);
+        }
+        
+        h1 {
+            font-size: 2.8rem;
+            color: #1a2a6c;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            color: #555;
+            max-width: 700px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+        
+        .admin-info {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(26, 42, 108, 0.1);
+            padding: 8px 15px;
+            border-radius: 30px;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .admin-info.admin-logged-in {
+            background: rgba(26, 42, 108, 0.2);
+            border: 2px solid #1a2a6c;
+        }
+        
+        .admin-info i {
+            margin-right: 8px;
+            color: #1a2a6c;
+        }
+        
+        .logout-btn {
+            background: #ff6b6b;
+            color: white;
+            border: none;
+            padding: 4px 10px;
+            border-radius: 15px;
+            margin-left: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .logout-btn:hover {
+            background: #ff5252;
+            transform: scale(1.05);
+        }
+        
+        .main-content {
+            display: flex;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .message-form {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            position: sticky;
+            top: 20px;
+        }
+        
+        .message-list {
+            flex: 2;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            max-height: 800px;
+            overflow-y: auto;
+        }
+        
+        .form-title {
+            font-size: 1.8rem;
+            margin-bottom: 25px;
+            color: #1a2a6c;
+            text-align: center;
+            position: relative;
+            padding-bottom: 15px;
+        }
+        
+        .form-title::after {
+            content: "";
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 4px;
+            background: linear-gradient(to right, #1a2a6c, #b21f1f);
+            border-radius: 2px;
+        }
+        
+        .form-group {
+            margin-bottom: 25px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: #444;
+            display: flex;
+            align-items: center;
+        }
+        
+        label i {
+            margin-right: 10px;
+            color: #1a2a6c;
+        }
+        
+        input, textarea {
+            width: 100%;
+            padding: 14px 18px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+        
+        input:focus, textarea:focus {
+            border-color: #1a2a6c;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(26, 42, 108, 0.2);
+        }
+        
+        textarea {
+            min-height: 150px;
+            resize: vertical;
+        }
+        
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(to right, #1a2a6c, #b21f1f);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .btn::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: 0.5s;
+        }
+        
+        .btn:hover::after {
+            left: 100%;
+        }
+        
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 7px 20px rgba(0, 0, 0, 0.3);
+        }
+        
+        .admin-login-note {
+            text-align: center;
+            margin-top: 15px;
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .admin-login-note strong {
+            color: #1a2a6c;
+        }
+        
+        .message-card {
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+            border-left: 5px solid #1a2a6c;
+            transition: all 0.3s;
+            position: relative;
+            animation: fadeIn 0.5s ease-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .message-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+        }
+        
+        .message-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 15px;
+        }
+        
+        .author {
+            font-weight: bold;
+            color: #1a2a6c;
+            font-size: 19px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .author i {
+            margin-right: 8px;
+        }
+        
+        .timestamp {
+            color: #777;
+            font-size: 15px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .timestamp i {
+            margin-right: 5px;
+        }
+        
+        .message-content {
+            line-height: 1.7;
+            color: #444;
+            font-size: 17px;
+            padding: 10px 0;
+        }
+        
+        .delete-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: #ff6b6b;
+            color: white;
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .delete-btn:hover {
+            background: #ff5252;
+            transform: scale(1.1);
+        }
+        
+        .empty-message {
+            text-align: center;
+            color: #777;
+            padding: 60px 20px;
+            font-size: 18px;
+        }
+        
+        .empty-message i {
+            font-size: 60px;
+            margin-bottom: 20px;
+            color: #ddd;
+        }
+        
+        footer {
+            text-align: center;
+            padding: 25px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 15px;
+            color: #555;
+            font-size: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+        }
+        
+        .stats {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 15px;
+            font-weight: 600;
+        }
+        
+        .stat-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .stat-value {
+            font-size: 24px;
+            color: #1a2a6c;
+            font-weight: 700;
+        }
+        
+        .stat-label {
+            font-size: 14px;
+            color: #777;
+        }
+        
+        @media (max-width: 900px) {
+            .main-content {
+                flex-direction: column;
+            }
+            
+            h1 {
+                font-size: 2.2rem;
+            }
+            
+            .message-form {
+                position: static;
+            }
+            
+            .admin-info {
+                position: relative;
+                top: 0;
+                right: 0;
+                margin-top: 15px;
+                justify-content: center;
+            }
+        }
+        
+        @media (max-width: 500px) {
+            header {
+                padding: 20px 15px;
+            }
+            
+            h1 {
+                font-size: 1.8rem;
+            }
+            
+            .subtitle {
+                font-size: 1rem;
+            }
+            
+            .message-form, .message-list {
+                padding: 20px;
+            }
+            
+            .message-header {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .delete-btn {
+                top: 15px;
+                right: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-comment-dots"></i> 管理员留言系统</h1>
+            <p class="subtitle">普通用户可以留言，只有管理员可以删除留言</p>
+            
+            <div class="admin-info" id="admin-info">
+                <i class="fas fa-user-shield"></i>
+                <span>管理员未登录</span>
+            </div>
+        </header>
+        
+        <div class="main-content">
+            <div class="message-form">
+                <h2 class="form-title"><i class="fas fa-edit"></i> 发表留言</h2>
+                <div class="form-group">
+                    <label for="name"><i class="fas fa-user"></i> 您的昵称</label>
+                    <input type="text" id="name" placeholder="请输入您的昵称">
+                </div>
+                <div class="form-group">
+                    <label for="email"><i class="fas fa-envelope"></i> 电子邮箱</label>
+                    <input type="email" id="email" placeholder="请输入您的邮箱（可选）">
+                </div>
+                <div class="form-group">
+                    <label for="message"><i class="fas fa-comment"></i> 留言内容</label>
+                    <textarea id="message" placeholder="请在此输入您的留言内容..."></textarea>
+                </div>
+                <button class="btn" id="submit-btn">
+                    <i class="fas fa-paper-plane"></i> 提交留言
+                </button>
+                
+                <div class="admin-login-note">
+                    <p><strong></strong>"</p>
+                </div>
+            </div>
+            
+            <div class="message-list">
+                <h2 class="form-title"><i class="fas fa-list"></i> 留言列表</h2>
+                <div id="messages-container">
+                    <div class="message-card">
+                        <div class="message-header">
+                            <div class="author">
+                                <i class="fas fa-user-circle"></i> 系统提示
+                            </div>
+                            <div class="timestamp">
+                                <i class="far fa-clock"></i> 正在加载留言...
+                            </div>
+                        </div>
+                        <div class="message-content">
+                            正在从后端API获取留言数据，请稍候...
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <p>© 2023 管理员留言系统 | 只有管理员可以删除留言</p>
+            <div class="stats">
+                <div class="stat-item">
+                    <span class="stat-value" id="total-messages">0</span>
+                    <span class="stat-label">总留言数</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value" id="today-messages">0</span>
+                    <span class="stat-label">今日留言</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value" id="active-users">0</span>
+                    <span class="stat-label">活跃用户</span>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // 后端API地址
+        const API_BASE_URL = 'http://:152.136.201.222:1000';
+        
+        // DOM元素
+        const submitBtn = document.getElementById('submit-btn');
+        const nameInput = document.getElementById('name');
+        const emailInput = document.getElementById('email');
+        const messageInput = document.getElementById('message');
+        const messagesContainer = document.getElementById('messages-container');
+        const totalMessagesEl = document.getElementById('total-messages');
+        const todayMessagesEl = document.getElementById('today-messages');
+        const activeUsersEl = document.getElementById('active-users');
+        const adminInfoEl = document.getElementById('admin-info');
+        
+        // 管理员状态
+        let isAdmin = false;
+        
+        // 检查管理员登录状态
+        async function checkAdminStatus() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/admin/status`);
+                const data = await response.json();
+                
+                if (data.isAdmin) {
+                    isAdmin = true;
+                    adminInfoEl.innerHTML = `
+                        <i class="fas fa-user-shield"></i>
+                        <span>管理员已登录</span>
+                        <button class="logout-btn" id="logout-btn">登出</button>
+                    `;
+                    adminInfoEl.classList.add('admin-logged-in');
+                    
+                    // 添加登出事件监听器
+                    document.getElementById('logout-btn').addEventListener('click', logoutAdmin);
+                }
+                
+                // 重新加载留言以显示删除按钮
+                await loadMessages();
+            } catch (error) {
+                console.error('检查管理员状态失败:', error);
+            }
+        }
+        
+        // 管理员登录
+        async function loginAdmin() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/admin/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    isAdmin = true;
+                    adminInfoEl.innerHTML = `
+                        <i class="fas fa-user-shield"></i>
+                        <span>管理员已登录</span>
+                        <button class="logout-btn" id="logout-btn">登出</button>
+                    `;
+                    adminInfoEl.classList.add('admin-logged-in');
+                    
+                    // 添加登出事件监听器
+                    document.getElementById('logout-btn').addEventListener('click', logoutAdmin);
+                    
+                    // 显示成功消息
+                    showMessage('管理员登录成功！', 'success');
+                    
+                    // 重新加载留言以显示删除按钮
+                    await loadMessages();
+                } else {
+                    showMessage('管理员登录失败', 'error');
+                }
+            } catch (error) {
+                showMessage(`登录失败: ${error.message}`, 'error');
+                console.error('管理员登录失败:', error);
+            }
+        }
+        
+        // 管理员登出
+        async function logoutAdmin() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/admin/logout`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    isAdmin = false;
+                    adminInfoEl.innerHTML = `
+                        <i class="fas fa-user-shield"></i>
+                        <span>管理员未登录</span>
+                    `;
+                    adminInfoEl.classList.remove('admin-logged-in');
+                    
+                    // 重新加载留言以隐藏删除按钮
+                    await loadMessages();
+                    
+                    // 显示成功消息
+                    showMessage('管理员已登出', 'success');
+                }
+            } catch (error) {
+                console.error('管理员登出失败:', error);
+            }
+        }
+        
+        // 加载留言
+        async function loadMessages() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/messages`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP错误! 状态: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                if (data.length === 0) {
+                    messagesContainer.innerHTML = `
+                        <div class="empty-message">
+                            <i class="fas fa-comment-slash"></i>
+                            <p>暂无留言，成为第一个留言者吧！</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                messagesContainer.innerHTML = '';
+                
+                // 倒序显示留言（最新的在前）
+                data.reverse().forEach(message => {
+                    const messageCard = document.createElement('div');
+                    messageCard.className = 'message-card';
+                    messageCard.innerHTML = `
+                        <div class="message-header">
+                            <div class="author">
+                                <i class="fas fa-user-circle"></i> ${message.name}
+                                ${message.email ? `<small style="margin-left:10px;color:#777;">(${message.email})</small>` : ''}
+                            </div>
+                            <div class="timestamp">
+                                <i class="far fa-clock"></i> ${message.timestamp}
+                            </div>
+                        </div>
+                        <div class="message-content">
+                            ${message.content}
+                        </div>
+                        ${isAdmin ? `
+                        <button class="delete-btn" data-id="${message.id}">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                        ` : ''}
+                    `;
+                    messagesContainer.appendChild(messageCard);
+                });
+                
+                // 添加删除事件监听器
+                if (isAdmin) {
+                    document.querySelectorAll('.delete-btn').forEach(btn => {
+                        btn.addEventListener('click', deleteMessageHandler);
+                    });
+                }
+                
+            } catch (error) {
+                messagesContainer.innerHTML = `
+                    <div class="empty-message">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <p>加载留言失败: ${error.message}</p>
+                        <p style="margin-top:10px;font-size:14px;">请确保后端服务器已启动并运行在 ${API_BASE_URL}</p>
+                    </div>
+                `;
+                console.error('加载留言失败:', error);
+            }
+        }
+        
+        // 更新统计信息
+        async function updateStats() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/stats`);
+                const stats = await response.json();
+                
+                totalMessagesEl.textContent = stats.totalMessages;
+                todayMessagesEl.textContent = stats.todayMessages;
+                activeUsersEl.textContent = stats.activeUsers;
+                
+            } catch (error) {
+                console.error('更新统计信息失败:', error);
+            }
+        }
+        
+        // 提交留言处理
+        async function submitMessage() {
+            const name = nameInput.value.trim();
+            const email = emailInput.value.trim();
+            const message = messageInput.value.trim();
+            
+            if (!name) {
+                showMessage('请输入您的昵称！', 'error');
+                nameInput.focus();
+                return;
+            }
+            
+            if (!message) {
+                showMessage('请输入留言内容！', 'error');
+                messageInput.focus();
+                return;
+            }
+            
+            // 检查是否是管理员登录请求
+            if (email === 'admin' && message === 'admin123') {
+                await loginAdmin();
+                // 清空表单
+                nameInput.value = '';
+                emailInput.value = '';
+                messageInput.value = '';
+                return;
+            }
+            
+            try {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 提交中...';
+                
+                const response = await fetch(`${API_BASE_URL}/messages`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        name,
+                        email,
+                        content: message
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`提交失败! 状态: ${response.status}`);
+                }
+                
+                // 清空表单
+                nameInput.value = '';
+                emailInput.value = '';
+                messageInput.value = '';
+                
+                // 重新加载留言
+                await loadMessages();
+                await updateStats();
+                
+                // 显示成功消息
+                showMessage('留言提交成功！', 'success');
+                
+            } catch (error) {
+                showMessage(`提交失败: ${error.message}`, 'error');
+                console.error('提交留言失败:', error);
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> 提交留言';
+            }
+        }
+        
+        // 删除留言处理
+        async function deleteMessageHandler(event) {
+            const id = event.currentTarget.getAttribute('data-id');
+            const confirmDelete = confirm('确定要删除这条留言吗？');
+            
+            if (!confirmDelete) return;
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/messages/${id}`, {
+                    method: 'DELETE'
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`删除失败! 状态: ${response.status}`);
+                }
+                
+                // 重新加载留言
+                await loadMessages();
+                await updateStats();
+                showMessage('留言已删除', 'success');
+                
+            } catch (error) {
+                showMessage(`删除失败: ${error.message}`, 'error');
+                console.error('删除留言失败:', error);
+            }
+        }
+        
+        // 显示消息通知
+        function showMessage(text, type) {
+            const toast = document.createElement('div');
+            toast.textContent = text;
+            toast.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 15px 25px;
+                background: ${type === 'success' ? '#4caf50' : '#f44336'};
+                color: white;
+                border-radius: 8px;
+                box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+                z-index: 1000;
+                opacity: 0;
+                transform: translateX(100%);
+                transition: all 0.3s ease;
+            `;
+            
+            document.body.appendChild(toast);
+            
+            // 显示动画
+            setTimeout(() => {
+                toast.style.opacity = '1';
+                toast.style.transform = 'translateX(0)';
+            }, 10);
+            
+            // 3秒后移除
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(100%)';
+                setTimeout(() => {
+                    document.body.removeChild(toast);
+                }, 300);
+            }, 3000);
+        }
+        
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', async () => {
+            // 检查管理员状态
+            await checkAdminStatus();
+            
+            // 加载留言
+            await loadMessages();
+            
+            // 更新统计信息
+            await updateStats();
+            
+            // 添加事件监听器
+            submitBtn.addEventListener('click', submitMessage);
+            
+            // 按Enter键提交（在留言框内）
+            messageInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    submitMessage();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
